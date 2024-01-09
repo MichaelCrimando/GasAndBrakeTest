@@ -41,7 +41,9 @@ class GameControllerManager(context: Context) {
 //        String::class.java
 //    )
 
+    fun init(){
 
+    }
 
     @SuppressLint("BlockedPrivateApi")
     fun start() : String{
