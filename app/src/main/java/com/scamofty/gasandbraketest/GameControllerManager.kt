@@ -16,6 +16,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.reflect.Method
+import kotlin.math.absoluteValue
 
 class GameControllerManager(context: Context) {
     private val TAG = "GameControllerManager"
@@ -29,24 +30,13 @@ class GameControllerManager(context: Context) {
         InputEvent::class.java,
         Int::class.javaPrimitiveType
     )
-//    @SuppressLint("DiscouragedPrivateApi", "BlockedPrivateApi")
-//    val addUniqueIdAssociationByDescriptor = InputManager::class.java.getDeclaredMethod(
-//        "addUniqueIdAssociation",
-//        String::class.java,
-//        String::class.java
-//    )
-//    @SuppressLint("DiscouragedPrivateApi", "BlockedPrivateApi")
-//    val removeUniqueIdAssociationByDescriptor = InputManager::class.java.getDeclaredMethod(
-//        "removeUniqueIdAssociation",
-//        String::class.java
-//    )
 
     fun init(){
-
     }
 
     @SuppressLint("BlockedPrivateApi")
     fun start() : String{
+        val virtualInputDevice = mInputManager.getInputDevice(-1)
         try {
             val addUniqueIdAssociationByDescriptor: Method = InputManager::class.java.getDeclaredMethod(
                 "addUniqueIdAssociationByDescriptor",
@@ -54,29 +44,45 @@ class GameControllerManager(context: Context) {
                 String::class.java
             )
             addUniqueIdAssociationByDescriptor.isAccessible = true
-            addUniqueIdAssociationByDescriptor.invoke(mInputManager, "a718a782d34bc767f4689c232d64d527998ea7fd", "0")
+            addUniqueIdAssociationByDescriptor.invoke(mInputManager, virtualInputDevice?.descriptor, "0")
             Log.d(TAG, "Device associated")
         } catch (e: Exception) {
             Log.d(TAG, "Device association failed")
         }
 
         isRunning=true
+        var ii = 0.0f
+        var incrementing = true
         coroutineScope.launch {
             while(isRunning){
-                sendButtonDownThenUp(KeyEvent.KEYCODE_BUTTON_B, 305)
+                //sendButtonDownThenUp(KeyEvent.KEYCODE_BUTTON_B, 305)
+                sendGasAxisEvent(ii.absoluteValue)
+                sendBrakeAxisEvent(ii.absoluteValue)
+                sendXAxisEvent(ii)
+                if(ii >= 1.0f){
+                    incrementing = false
+                } else if(ii <= -1.0f){
+                    incrementing = true
+                }
+                if(incrementing){
+                    ii += 0.1f
+                } else {
+                    ii -= 0.1f
+                }
                 delay(1000L)
             }
         }
         return "Started"
     }
     fun stop() : String{
+        val virtualInputDevice = mInputManager.getInputDevice(-1)
         try {
             val removeUniqueIdAssociationByDescriptor: Method = InputManager::class.java.getDeclaredMethod(
                 "removeUniqueIdAssociationByDescriptor",
                 String::class.java
             )
             removeUniqueIdAssociationByDescriptor.isAccessible = true
-            removeUniqueIdAssociationByDescriptor.invoke(mInputManager, "a718a782d34bc767f4689c232d64d527998ea7fd")
+            removeUniqueIdAssociationByDescriptor.invoke(mInputManager, virtualInputDevice?.descriptor)
             Log.d(TAG, "Device association removed")
         } catch (e: Exception) {
             Log.d(TAG, "Device association removal failed")
@@ -163,6 +169,36 @@ class GameControllerManager(context: Context) {
         injectInputEvent.invoke(mInputManager, event, 0)
 
         event.recycle()
+
+    }
+
+    fun sendXAxisEvent(angle: Float){
+        Log.d(TAG, "sendXAxisEvent: $angle")
+        val eventTime = SystemClock.uptimeMillis()
+
+        //On actual car will for sure need some sort of translation from steering wheel angle to steering wheel axis
+        val event = mInputManager.getInputDevice(-1)?.let {
+            MotionEvent.obtain(
+                /* downTime= */ eventTime,
+                /* eventTime= */ eventTime,
+                /* action= */ MotionEvent.ACTION_MOVE,
+                /* x= */ angle,
+                /* y= */ 0.0f,
+                /* pressure= */ 1.0f,
+                /* size= */ 0f,
+                /* metaState= */ 0,
+                /* xPrecision= */ 0.1f,
+                /* yPrecision= */ 0.1f,
+                /* deviceId= */ it.id,
+                /* edgeFlags= */ 0
+            )
+        }
+        if (event != null) {
+            event.source = InputDevice.SOURCE_JOYSTICK
+        }
+        injectInputEvent.invoke(mInputManager, event, 0)
+
+        event?.recycle()
 
     }
 }

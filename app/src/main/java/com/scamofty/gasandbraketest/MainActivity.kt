@@ -51,6 +51,11 @@ class MainActivity : ComponentActivity() {
         }
         gameControllerManager = GameControllerManager(this)
     }
+
+    override fun onResume(){
+        super.onResume()
+        gameControllerManager.stop()
+    }
 }
 
 @Composable
