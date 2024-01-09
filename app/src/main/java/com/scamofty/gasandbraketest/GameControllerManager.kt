@@ -12,7 +12,6 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.reflect.Method
@@ -38,13 +37,13 @@ class GameControllerManager(context: Context) {
     fun start() : String{
         val virtualInputDevice = mInputManager.getInputDevice(-1)
         try {
-            val addUniqueIdAssociationByDescriptor: Method = InputManager::class.java.getDeclaredMethod(
-                "addUniqueIdAssociationByDescriptor",
+            val addUniqueIdAssociation: Method = InputManager::class.java.getDeclaredMethod(
+                "addUniqueIdAssociation",
                 String::class.java,
                 String::class.java
             )
-            addUniqueIdAssociationByDescriptor.isAccessible = true
-            addUniqueIdAssociationByDescriptor.invoke(mInputManager, virtualInputDevice?.descriptor, "0")
+            addUniqueIdAssociation.isAccessible = true
+            addUniqueIdAssociation.invoke(mInputManager, virtualInputDevice?.name, "0")
             Log.d(TAG, "Device associated")
         } catch (e: Exception) {
             Log.d(TAG, "Device association failed")
@@ -74,15 +73,16 @@ class GameControllerManager(context: Context) {
         }
         return "Started"
     }
+    @SuppressLint("BlockedPrivateApi")
     fun stop() : String{
         val virtualInputDevice = mInputManager.getInputDevice(-1)
         try {
-            val removeUniqueIdAssociationByDescriptor: Method = InputManager::class.java.getDeclaredMethod(
-                "removeUniqueIdAssociationByDescriptor",
+            val removeUniqueIdAssociation: Method = InputManager::class.java.getDeclaredMethod(
+                "removeUniqueIdAssociation",
                 String::class.java
             )
-            removeUniqueIdAssociationByDescriptor.isAccessible = true
-            removeUniqueIdAssociationByDescriptor.invoke(mInputManager, virtualInputDevice?.descriptor)
+            removeUniqueIdAssociation.isAccessible = true
+            removeUniqueIdAssociation.invoke(mInputManager, virtualInputDevice?.name)
             Log.d(TAG, "Device association removed")
         } catch (e: Exception) {
             Log.d(TAG, "Device association removal failed")
