@@ -136,7 +136,6 @@ class GameControllerManager(context: Context) {
         Log.d(TAG, "sendGasAxisEvent: $gas")
         val eventTime = SystemClock.uptimeMillis()
 
-        //On actual car will for sure need some sort of translation from gas pedal to gas axis
         val event = MotionEvent.obtain(
             eventTime,
             eventTime,
@@ -156,7 +155,6 @@ class GameControllerManager(context: Context) {
         Log.d(TAG, "sendBrakeAxisEvent: $brake")
         val eventTime = SystemClock.uptimeMillis()
 
-        //On actual car will for sure need some sort of translation from brake pedal to brake axis
         val event = MotionEvent.obtain(
             eventTime,
             eventTime,
@@ -176,7 +174,6 @@ class GameControllerManager(context: Context) {
         Log.d(TAG, "sendXAxisEvent: $angle")
         val eventTime = SystemClock.uptimeMillis()
 
-        //On actual car will for sure need some sort of translation from steering wheel angle to steering wheel axis
         val event = mInputManager.getInputDevice(-1)?.let {
             MotionEvent.obtain(
                 /* downTime= */ eventTime,
